@@ -1,0 +1,97 @@
+<?php
+    $request_method=$_SERVER['REQUEST_METHOD'];
+    $response = array();
+
+    switch($request_method){
+        case "GET":
+            response(doGet());
+        break;
+        case "POST":
+            response(doPost());
+        break;
+        case "DELETE":
+            response(doDelete());
+        break; 
+        case "PUT":
+            response(doPut());
+        break;
+    }
+    function doGet(){
+        if(@$_GET['id']){
+           @$id=$_GET['id'];
+            $where="WHERE id=".$id;
+        }
+        else
+        {
+            $id=0;
+            $where="";
+        }
+        $dbConnect=mysqli_connect("localhost","root","","api") or die('not connected');
+        $sql= "SELECT  * FROM student;";
+
+        $query=mysqli_query($dbConnect,$sql) or die("badquery:$sql");
+        
+        while($data= mysqli_fetch_assoc($query)){
+            $response[]=array('id'=>$data['id'] , 'name'=>$data['std_name'],'email'=>$data['std_email'],'roll no'=>$data['std_roll']);
+        }
+        return $response;
+    
+    } 
+    function doPost(){
+        if($_POST){
+
+            $dbConnect=mysqli_connect("localhost","root","","api") or die('not connected');
+            $sql= "INSERT INTO `student`(`id`, `std_name`, `std_email`, `std_roll`) VALUES ('".$_POST['id']."','".$_POST['std_name']."','".$_POST['std_email']."','".$_POST['std_roll']."');";     $query=mysqli_query($dbConnect,$sql);
+
+            if($query==true){
+                $response=array("message"=>"success insert");
+            }
+            else{
+                $response=array("message"=>"failed");
+            }
+        }
+        return $response;
+    }
+    function doDelete(){
+        if($_GET['id']){
+
+            $dbConnect=mysqli_connect("localhost","root","","api") or die('not connected');
+            $sql= "DELETE FROM `student` WHERE id='".$_GET['id']."';";
+    
+            $query=mysqli_query($dbConnect,$sql);
+            if($query==true){
+                $response=array("message"=>"success delete");
+            }
+            else{
+                $response=array("message"=>"failed");
+            }
+        }
+        return $response;
+    }
+    function doPut(){
+            parse_str(file_get_contents('php://input'),$_PUT);
+            //print_r($_PUT);
+            if($_PUT){
+            $dbConnect=mysqli_connect("localhost","root","","api") or die('not connected');
+            $sql= "UPDATE `student` SET
+            `std_name`='".$_PUT['std_name']."',
+            `std_email`='".$_PUT['std_email']."',
+            `std_roll`='".$_PUT['std_roll']."'
+            WHERE id='".$_GET['id']."';";
+            $query=mysqli_query($dbConnect,$sql) or die("badquery:$sql");
+            if($query==true){
+                $response=array("message"=>"success update");
+            }
+            else{
+                $response=array("message"=>"failed");
+            }
+        }
+        return $response;
+    }
+    
+    function response($response){
+        echo json_encode(array("status"=>200,"data"=>$response));
+    }
+
+    
+?>
